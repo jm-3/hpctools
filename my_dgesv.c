@@ -35,7 +35,7 @@ void print_matrix(const char *name, double *matrix, int size)
     }
 }
 
-int my_dgesv(int n, double *a, double *b) {
+void my_dgesv(int n, double *a, double *b) {
 	int i,j,k,l;
 	double aux;
 
@@ -83,15 +83,35 @@ int my_dgesv(int n, double *a, double *b) {
     
 }
 
+int check_solution(int size, double *a){
+    int i,j,counter;
+    double umbral=1e-8, expected_value;
+    counter=0;
+    for(i=0;i<size;i++)
+	for(j=0;j<size;j++) {
+	if(counter==(size*i)+i)
+		expected_value=1.0;
+	else
+		expected_value=0.0;
+        if (fabs(expected_value-a[i])>umbral) return 0;
+    }
+    return 1;
 
-    void main(int argc, char *argv[])
+}
+
+
+int main(int argc, char *argv[])
     {
+	if(argc<2){
+		printf("Error: tiene que indicar el tamaño de la matriz\n");
+		return 0;
+	}
 
         int size = atoi(argv[1]);
 
         double *a;
         double *b;
-	clock_t tStart;
+	clock_t tStart,tEnd;
 
         a = generate_matrix(size);
         b = generate_matrix(size);
@@ -99,7 +119,16 @@ int my_dgesv(int n, double *a, double *b) {
 
         tStart = clock();   
         my_dgesv(size, a, b);
-        printf("Time taken by my implementation: %.2fs\n", (double)(clock() - tStart) / CLOCKS_PER_SEC);
-        
-        
+	tEnd = clock();
+
+	if(check_solution(size,b)){
+		printf("Solución correcta!!\n");
+	}else{
+		printf("Solución incorrecta!!!\n");
+	}
+
+        printf("%s %s: time taken by my implementation: %.3fs\n", argv[0], argv[1], (double) (tEnd - tStart) / CLOCKS_PER_SEC);
+
+    
+        return 0; 
     }
