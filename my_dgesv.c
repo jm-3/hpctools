@@ -51,6 +51,9 @@ void my_dgesv(int n, double *a, double *b) {
 				aux-=a[i*n+k]*a[k*n+j];
 			a[i*n+j]=aux;
 		}
+	}
+
+	for(j=0; j<n; j++)
 		// calculo de alfas correspondientes a L
 		for(i=j+1;i<n;i++){
 			aux = a[i*n+j];
@@ -71,7 +74,9 @@ void my_dgesv(int n, double *a, double *b) {
 			b[i*n+l]=aux;
 
 		}
-	
+	}
+
+	for(l=0;l<n;l++){	
 		// resolver Ux=y
 		for(i=n-1;i>-1;i--){
 			aux=b[i*n+l];
