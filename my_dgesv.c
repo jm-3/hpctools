@@ -5,7 +5,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <unistd.h>
+#include <string.h>
+
 double t1,t2,t3,t4;
+double doublesperline;
 
 double *generate_matrix(int size)
 {
@@ -38,10 +42,11 @@ void print_matrix(const char *name, double *matrix, int size)
 
 void my_dgesv(int n, double *a, double *b) {
 	int i,j,k,l;
-	double aux;	
+	double aux, *kk;	
 	clock_t tStart,tEnd;
 
 
+        kk=(double*)malloc(sizeof(double)*n);
 	// realizar la descomposicion LU
 	//
 	// mediante el algoritmo de Crout
@@ -74,28 +79,32 @@ void my_dgesv(int n, double *a, double *b) {
 	
 	// para cada columna de b
 	tStart=clock();
-	for(l=0;l<n;l++){
-		// resolver Ly=b
-		for(i=0;i<n;i++){
-			aux=b[i*n+l];
-			for(j=0;j<i;j++)
-				aux-=a[i*n+j]*b[j*n+l];
-			b[i*n+l]=aux;
-
-		}
-	}
+        for(l=0;l<n;l++){
+            // copiar 
+            memcpy(kk,b+l*n,n);
+            // resolver Ly=b
+            for(i=0;i<n;i++){
+		aux=kk[i];
+		for(j=0;j<i;j++)
+			aux-=a[i*n+j]*kk[j];
+		kk[i]=aux;
+            }
+            memcpy(b+l*n,kk,n);
+        }
 	tEnd=clock();
 	t3+=tEnd-tStart;
 
 	tStart=clock();
 	for(l=0;l<n;l++){	
-		// resolver Ux=y
-		for(i=n-1;i>-1;i--){
-			aux=b[i*n+l];
-			for(j=i+1;j<n;j++)
-				aux-=a[i*n+j]*b[j*n+l];
-			b[i*n+l]=aux/a[i*n+i];
-		}
+            memcpy(kk,b+l*n,n);
+            // resolver Ux=y
+            for(i=n-1;i>-1;i--){
+		aux=kk[i];
+		for(j=i+1;j<n;j++)
+			aux-=a[i*n+j]*kk[j];
+		kk[i]=aux/a[i*n+i];
+            }
+            memcpy(b+l*n,kk,n);
 	}
 	tEnd=clock();
 	t4+=tEnd-tStart;
@@ -130,9 +139,13 @@ int main(int argc, char *argv[])
 
         double *a;
         double *b;
-		clock_t tStart,tEnd;
+        clock_t tStart,tEnd;
+        int linesize;
 	
-		t1=t2=t3=t4=0;
+	t1=t2=t3=t4=0;
+        
+        linesize=sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+        doublesperline=linesize/sizeof(double);
 
         a = generate_matrix(size);
         b = generate_matrix(size);
