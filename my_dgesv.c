@@ -81,7 +81,9 @@ void my_dgesv(int n, double *a, double *b) {
 	tStart=clock();
         for(l=0;l<n;l++){
             // copiar 
-            memcpy(kk,b+l*n,n);
+            for(i=0;i<n;i++){
+                kk[i]=b[i*n+l];
+            }            
             // resolver Ly=b
             for(i=0;i<n;i++){
 		aux=kk[i];
@@ -89,22 +91,30 @@ void my_dgesv(int n, double *a, double *b) {
 			aux-=a[i*n+j]*kk[j];
 		kk[i]=aux;
             }
-            memcpy(b+l*n,kk,n);
+            for(i=0;i<n;i++){
+                b[i*n+l]=kk[i];
+            }            
+            
         }
 	tEnd=clock();
 	t3+=tEnd-tStart;
 
 	tStart=clock();
 	for(l=0;l<n;l++){	
-            memcpy(kk,b+l*n,n);
-            // resolver Ux=y
+            // resolver Ux=y		
+            // copiar 
+            for(i=0;i<n;i++){
+                kk[i]=b[i*n+l];
+            }            
             for(i=n-1;i>-1;i--){
-		aux=kk[i];
-		for(j=i+1;j<n;j++)
-			aux-=a[i*n+j]*kk[j];
-		kk[i]=aux/a[i*n+i];
+                    aux=kk[i];
+                    for(j=i+1;j<n;j++)
+                            aux-=a[i*n+j]*kk[j];
+                    kk[i]=aux/a[i*n+i];
             }
-            memcpy(b+l*n,kk,n);
+            for(i=0;i<n;i++){
+                b[i*n+l]=kk[i];
+            }            		
 	}
 	tEnd=clock();
 	t4+=tEnd-tStart;
@@ -117,11 +127,12 @@ int check_solution(int size, double *a){
     counter=0;
     for(i=0;i<size;i++)
 	for(j=0;j<size;j++) {
-	if(counter==(size*i)+i)
+	if(counter==(size*i)+j)
 		expected_value=1.0;
 	else
 		expected_value=0.0;
-        if (fabs(expected_value-a[i])>umbral) return 0;
+        if (fabs(expected_value-a[i*size+j])>umbral) { printf("%d %d %lf\n",i,j,a[i*size+j]);return 0;}
+        counter++;
     }
     return 1;
 
